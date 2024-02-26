@@ -786,6 +786,27 @@ defmodule Mix.Tasks.ReleaseTest do
     end)
   end
 
+  test "stale files in overlays" do
+    in_fixture("release_test", fn ->
+      Mix.Project.in_project(:release_test, ".", fn _ ->
+        File.mkdir_p!("rel/overlays")
+        File.write!("rel/overlays/file1", "hello")
+        File.write!("rel/overlays/file2", "world")
+
+        root = Path.absname("_build/dev/rel/release_test")
+
+        Mix.Task.run("release")
+        assert root |> Path.join("file1") |> File.read!() == "hello"
+        assert root |> Path.join("file2") |> File.read!() == "world"
+
+        File.rm!("rel/overlays/file2")
+
+        Mix.Task.rerun("release", ["--overwrite"])
+        refute root |> Path.join("file2") |> File.exists?()
+      end)
+    end)
+  end
+
   defp open_port(command, args, env \\ []) do
     env = for {k, v} <- env, do: {to_charlist(k), to_charlist(v)}
     Port.open({:spawn_executable, to_charlist(command)}, [:hide, args: args, env: env])

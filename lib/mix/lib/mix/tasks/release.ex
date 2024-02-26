@@ -1101,6 +1101,8 @@ defmodule Mix.Tasks.Release do
     message = "#{release.name}-#{release.version} on MIX_ENV=#{Mix.env()}"
     info(release, [:green, "* assembling ", :reset, message])
 
+    File.rm_rf!(release.path)
+
     # releases/
     #   VERSION/
     #     consolidated/
@@ -1190,7 +1192,6 @@ defmodule Mix.Tasks.Release do
 
   defp build_rel(release, config) do
     version_path = release.version_path
-    File.rm_rf!(version_path)
     File.mkdir_p!(version_path)
     release = maybe_add_config_reader_provider(config, release, version_path)
 
